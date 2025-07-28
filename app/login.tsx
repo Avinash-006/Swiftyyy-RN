@@ -302,50 +302,74 @@ export default function LoginScreen() {
     inputRef?: React.RefObject<TextInput>,
     onSubmitEditing?: () => void,
     returnKeyType?: 'next' | 'go' | 'done'
-  ) => (
-    <Animated.View style={{ transform: [{ translateY: inputBounce }] }}>
-      <View style={[styles.inputContainer, error && styles.inputContainerError]}>
-        <MaterialCommunityIcons
-          name={secureTextEntry ? 'lock' : 'email'}
-          size={18}
-          color={isDark ? '#0A84FF' : '#007AFF'}
-          style={styles.inputIcon}
-        />
-        <TextInput
-          ref={inputRef}
-          style={[styles.input, isDark ? styles.inputDark : styles.inputLight, error && styles.inputError]}
-          value={value}
-          onChangeText={onChangeText}
-          placeholder={placeholder}
-          placeholderTextColor={isDark ? '#8E8E93' : '#8E8E93'}
-          secureTextEntry={secureTextEntry}
-          autoCapitalize="none"
-          keyboardType={keyboardType}
-          selectionColor={isDark ? '#0A84FF' : '#007AFF'}
-          returnKeyType={returnKeyType}
-          onSubmitEditing={onSubmitEditing}
-          blurOnSubmit={false}
-          accessibilityLabel={placeholder}
-          accessibilityHint={secureTextEntry ? 'Enter your password' : 'Enter your username or email'}
-        />
-        {secureTextEntry && (
-          <TouchableOpacity
-            onPress={() => setShowPassword(!showPassword)}
-            style={styles.eyeIcon}
-            activeOpacity={0.7}
-            accessibilityLabel={showPassword ? 'Hide password' : 'Show password'}
-          >
-            <MaterialCommunityIcons
-              name={showPassword ? 'eye-off' : 'eye'}
-              size={18}
-              color={isDark ? '#0A84FF' : '#007AFF'}
-            />
-          </TouchableOpacity>
-        )}
-      </View>
-      {error ? <Text style={styles.errorText}>{error}</Text> : null}
-    </Animated.View>
-  );
+  ) => {
+    const containerStyles = [styles.inputContainer];
+    if (Platform.OS === 'android') {
+      containerStyles.push(styles.inputContainerAndroid);
+      containerStyles.push({
+        borderBottomColor: isDark ? '#8E8E93' : '#3A3A3C',
+      });
+    }
+    if (error) {
+      if (Platform.OS === 'android') {
+        containerStyles.push(styles.inputContainerErrorAndroid);
+      } else {
+        containerStyles.push(styles.inputContainerError);
+      }
+    }
+
+    const inputStyles = [styles.input, isDark ? styles.inputDark : styles.inputLight];
+    if (Platform.OS === 'android') {
+      inputStyles.push(styles.inputAndroid);
+    } else if (error) {
+      inputStyles.push(styles.inputError);
+    }
+
+    return (
+      <Animated.View style={{ transform: [{ translateY: inputBounce }] }}>
+        <View style={containerStyles}>
+          <MaterialCommunityIcons
+            name={secureTextEntry ? 'lock' : 'email'}
+            size={18}
+            color={isDark ? '#0A84FF' : '#007AFF'}
+            style={styles.inputIcon}
+          />
+          <TextInput
+            ref={inputRef}
+            style={inputStyles}
+            value={value}
+            onChangeText={onChangeText}
+            placeholder={placeholder}
+            placeholderTextColor={isDark ? '#8E8E93' : '#8E8E93'}
+            secureTextEntry={secureTextEntry}
+            autoCapitalize="none"
+            keyboardType={keyboardType}
+            selectionColor={isDark ? '#0A84FF' : '#007AFF'}
+            returnKeyType={returnKeyType}
+            onSubmitEditing={onSubmitEditing}
+            blurOnSubmit={false}
+            accessibilityLabel={placeholder}
+            accessibilityHint={secureTextEntry ? 'Enter your password' : 'Enter your username or email'}
+          />
+          {secureTextEntry && (
+            <TouchableOpacity
+              onPress={() => setShowPassword(!showPassword)}
+              style={styles.eyeIcon}
+              activeOpacity={0.7}
+              accessibilityLabel={showPassword ? 'Hide password' : 'Show password'}
+            >
+              <MaterialCommunityIcons
+                name={showPassword ? 'eye-off' : 'eye'}
+                size={18}
+                color={isDark ? '#0A84FF' : '#007AFF'}
+              />
+            </TouchableOpacity>
+          )}
+        </View>
+        {error ? <Text style={styles.errorText}>{error}</Text> : null}
+      </Animated.View>
+    );
+  };
 
   const renderSubmitButton = () => (
     <Animated.View style={{ transform: [{ scale: buttonScale }] }}>
@@ -641,9 +665,29 @@ const styles = StyleSheet.create({
       android: '#E0E0E0',
     }),
   },
+  inputContainerAndroid: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderRadius: 0,
+    backgroundColor: 'transparent',
+    borderWidth: 0,
+    borderColor: 'transparent',
+    borderBottomWidth: 1,
+    paddingBottom: 4,
+  },
+  inputContainerAndroidLight: {
+    borderBottomColor: '#3A3A3C',
+  },
+  inputContainerAndroidDark: {
+    borderBottomColor: '#8E8E93',
+  },
   inputContainerError: {
     borderColor: '#FF3B30',
     borderWidth: Platform.OS === 'ios' ? 1 : 2,
+  },
+  inputContainerErrorAndroid: {
+    borderBottomColor: '#FF3B30',
+    borderBottomWidth: 2,
   },
   inputIcon: {
     marginLeft: 18,
@@ -656,6 +700,11 @@ const styles = StyleSheet.create({
     fontSize: 20,
     borderRadius: 16,
     fontWeight: '400',
+  },
+  inputAndroid: {
+    backgroundColor: 'transparent',
+    paddingVertical: 16,
+    paddingHorizontal: 0,
   },
   inputLight: {
     backgroundColor: Platform.select({
