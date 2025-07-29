@@ -1,4 +1,7 @@
-import React, { useState, useRef, useEffect, useMemo } from 'react';
+// login.tsx (Login Screen)
+// Assumes "@expo/vector-icons/MaterialCommunityIcons", "react-native-toast-message", "AsyncStorage", and "expo-linear-gradient" are installed.
+
+import React, { useState, useRef, useEffect } from 'react';
 import {
   View,
   Text,
@@ -7,13 +10,12 @@ import {
   StyleSheet,
   ActivityIndicator,
   Platform,
-  Switch,
   KeyboardAvoidingView,
   ScrollView,
-  useColorScheme,
   Dimensions,
   Animated,
   Easing,
+  Image,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
@@ -22,6 +24,7 @@ import axios from 'axios';
 import Toast from 'react-native-toast-message';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import config from './config'; // Ensure config.js exports { url: 'your-api-url' }
+import { LinearGradient } from 'expo-linear-gradient';
 
 interface LoginData {
   username: string | null;
@@ -37,8 +40,6 @@ interface UserData {
 
 export default function LoginScreen() {
   const router = useRouter();
-  const colorScheme = useColorScheme();
-  const isDark = useMemo(() => colorScheme === 'dark', [colorScheme]);
   const insets = useSafeAreaInsets();
   const isIOS = Platform.OS === 'ios';
 
@@ -50,15 +51,19 @@ export default function LoginScreen() {
   const [emailError, setEmailError] = useState<string>('');
   const [passwordError, setPasswordError] = useState<string>('');
 
-  const passwordInputRef = useRef<TextInput>(null);
+  const passwordInputRef = useRef<TextInput>(null) as React.RefObject<TextInput>;
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const buttonScale = useRef(new Animated.Value(1)).current;
   const inputBounce = useRef(new Animated.Value(0)).current;
   const cardScale = useRef(new Animated.Value(0.95)).current;
-  const bgAnim1 = useRef(new Animated.Value(0)).current;
-  const bgAnim2 = useRef(new Animated.Value(0)).current;
-  const bgAnim3 = useRef(new Animated.Value(0)).current;
-  const bgAnim4 = useRef(new Animated.Value(0)).current;
+
+  // Animation values for twinkling stars
+  const starOpacity1 = new Animated.Value(0.3);
+  const starOpacity2 = new Animated.Value(0.8);
+  const starOpacity3 = new Animated.Value(0.5);
+  const starOpacity4 = new Animated.Value(0.4);
+  const starOpacity5 = new Animated.Value(0.7);
+  const starOpacity6 = new Animated.Value(0.6);
 
   useEffect(() => {
     // Load remembered credentials
@@ -107,90 +112,53 @@ export default function LoginScreen() {
       }),
     ]);
 
-    const bgLoop1 = Animated.loop(
-      Animated.sequence([
-        Animated.timing(bgAnim1, {
-          toValue: 80,
-          duration: 8000,
-          easing: Easing.inOut(Easing.ease),
-          useNativeDriver: true,
-        }),
-        Animated.timing(bgAnim1, {
-          toValue: 0,
-          duration: 8000,
-          easing: Easing.inOut(Easing.ease),
-          useNativeDriver: true,
-        }),
-      ])
-    );
+    // Star twinkling animation
+    const createTwinkleAnimation = (opacity: Animated.Value, delay: number) => {
+      return Animated.loop(
+        Animated.sequence([
+          Animated.timing(opacity, {
+            toValue: 1,
+            duration: 1500,
+            delay,
+            useNativeDriver: true,
+          }),
+          Animated.timing(opacity, {
+            toValue: 0.2,
+            duration: 1500,
+            useNativeDriver: true,
+          }),
+        ])
+      );
+    };
 
-    const bgLoop2 = Animated.loop(
-      Animated.sequence([
-        Animated.timing(bgAnim2, {
-          toValue: -80,
-          duration: 10000,
-          easing: Easing.inOut(Easing.ease),
-          useNativeDriver: true,
-        }),
-        Animated.timing(bgAnim2, {
-          toValue: 0,
-          duration: 10000,
-          easing: Easing.inOut(Easing.ease),
-          useNativeDriver: true,
-        }),
-      ])
-    );
+    const animation1 = createTwinkleAnimation(starOpacity1, 0);
+    const animation2 = createTwinkleAnimation(starOpacity2, 500);
+    const animation3 = createTwinkleAnimation(starOpacity3, 1000);
+    const animation4 = createTwinkleAnimation(starOpacity4, 1500);
+    const animation5 = createTwinkleAnimation(starOpacity5, 2000);
+    const animation6 = createTwinkleAnimation(starOpacity6, 2500);
 
-    const bgLoop3 = Animated.loop(
-      Animated.sequence([
-        Animated.timing(bgAnim3, {
-          toValue: 60,
-          duration: 9000,
-          easing: Easing.inOut(Easing.ease),
-          useNativeDriver: true,
-        }),
-        Animated.timing(bgAnim3, {
-          toValue: 0,
-          duration: 9000,
-          easing: Easing.inOut(Easing.ease),
-          useNativeDriver: true,
-        }),
-      ])
-    );
-
-    const bgLoop4 = Animated.loop(
-      Animated.sequence([
-        Animated.timing(bgAnim4, {
-          toValue: -60,
-          duration: 11000,
-          easing: Easing.inOut(Easing.ease),
-          useNativeDriver: true,
-        }),
-        Animated.timing(bgAnim4, {
-          toValue: 0,
-          duration: 11000,
-          easing: Easing.inOut(Easing.ease),
-          useNativeDriver: true,
-        }),
-      ])
-    );
+    animation1.start();
+    animation2.start();
+    animation3.start();
+    animation4.start();
+    animation5.start();
+    animation6.start();
 
     fadeIn.start();
     cardScaleAnim.start();
     inputBounceAnim.start();
-    bgLoop1.start();
-    bgLoop2.start();
-    bgLoop3.start();
-    bgLoop4.start();
 
     // Cleanup animations
     return () => {
-      bgLoop1.stop();
-      bgLoop2.stop();
-      bgLoop3.stop();
-      bgLoop4.stop();
+      animation1.stop();
+      animation2.stop();
+      animation3.stop();
+      animation4.stop();
+      animation5.stop();
+      animation6.stop();
     };
-  }, [fadeAnim, cardScale, inputBounce, bgAnim1, bgAnim2, bgAnim3, bgAnim4]);
+  }, [fadeAnim, cardScale, inputBounce, starOpacity1, starOpacity2, starOpacity3, starOpacity4, starOpacity5, starOpacity6]);
 
   const validateInputs = (): boolean => {
     let isValid = true;
@@ -292,46 +260,46 @@ export default function LoginScreen() {
     }).start();
   };
 
+  const toggleRemember = () => {
+    setRemember(!remember);
+  };
+
   const renderTextInput = (
     value: string,
     onChangeText: (text: string) => void,
     placeholder: string,
     error: string,
-    secureTextEntry?: boolean,
+    iconName: string,
+    secureTextEntry: boolean = false,
     keyboardType: 'default' | 'email-address' | 'numeric' = 'default',
     inputRef?: React.RefObject<TextInput>,
     onSubmitEditing?: () => void,
-    returnKeyType?: 'next' | 'go' | 'done'
+    returnKeyType: 'next' | 'go' | 'done' = 'next'
   ) => {
-    const containerStyles = [styles.inputContainer];
-    if (Platform.OS === 'android') {
-      containerStyles.push(styles.inputContainerAndroid);
-      containerStyles.push({
-        borderBottomColor: isDark ? '#8E8E93' : '#3A3A3C',
-      });
-    }
-    if (error) {
-      if (Platform.OS === 'android') {
-        containerStyles.push(styles.inputContainerErrorAndroid);
-      } else {
-        containerStyles.push(styles.inputContainerError);
-      }
-    }
+    const containerStyles = [
+      styles.inputContainer,
+      error && styles.inputContainerError,
+      Platform.select({
+        ios: styles.inputContainerIOS,
+        android: styles.inputContainerAndroid,
+      }),
+    ];
 
-    const inputStyles = [styles.input, isDark ? styles.inputDark : styles.inputLight];
-    if (Platform.OS === 'android') {
-      inputStyles.push(styles.inputAndroid);
-    } else if (error) {
-      inputStyles.push(styles.inputError);
-    }
+    const inputStyles = [
+      styles.input,
+      Platform.select({
+        ios: styles.inputIOS,
+        android: styles.inputAndroid,
+      }),
+    ];
 
     return (
       <Animated.View style={{ transform: [{ translateY: inputBounce }] }}>
         <View style={containerStyles}>
           <MaterialCommunityIcons
-            name={secureTextEntry ? 'lock' : 'email'}
-            size={18}
-            color={isDark ? '#0A84FF' : '#007AFF'}
+            name={iconName as any}
+            size={scale(20)}
+            color={'#FFFFFF'}
             style={styles.inputIcon}
           />
           <TextInput
@@ -340,11 +308,11 @@ export default function LoginScreen() {
             value={value}
             onChangeText={onChangeText}
             placeholder={placeholder}
-            placeholderTextColor={isDark ? '#8E8E93' : '#8E8E93'}
+            placeholderTextColor={'#A0A0A0'}
             secureTextEntry={secureTextEntry}
             autoCapitalize="none"
             keyboardType={keyboardType}
-            selectionColor={isDark ? '#0A84FF' : '#007AFF'}
+            selectionColor={'#FFFFFF'}
             returnKeyType={returnKeyType}
             onSubmitEditing={onSubmitEditing}
             blurOnSubmit={false}
@@ -360,23 +328,23 @@ export default function LoginScreen() {
             >
               <MaterialCommunityIcons
                 name={showPassword ? 'eye-off' : 'eye'}
-                size={18}
-                color={isDark ? '#0A84FF' : '#007AFF'}
+                size={scale(20)}
+                color={'#FFFFFF'}
               />
             </TouchableOpacity>
           )}
         </View>
-        {error ? <Text style={styles.errorText}>{error}</Text> : null}
+        {error ? <Text style={[styles.errorText, { fontSize: scale(14), marginTop: scale(8), marginLeft: scale(16) }]}>{error}</Text> : null}
       </Animated.View>
     );
   };
 
   const renderSubmitButton = () => (
-    <Animated.View style={{ transform: [{ scale: buttonScale }] }}>
+    <Animated.View style={{ transform: [{ scale: buttonScale }], zIndex: 20 }}>
       <TouchableOpacity
         style={[
           styles.submitButton,
-          isDark ? styles.buttonDark : styles.buttonLight,
+          { borderRadius: scale(Platform.OS === 'ios' ? 12 : 8), paddingVertical: scale(16), marginTop: scale(30) },
           loading && styles.disabledButton,
         ]}
         onPress={handleSubmit}
@@ -389,151 +357,182 @@ export default function LoginScreen() {
       >
         <View style={styles.buttonInner}>
           {loading ? (
-            <ActivityIndicator color="#FFFFFF" />
+            <ActivityIndicator color="#000000" />
           ) : (
-            <Text style={styles.submitButtonText}>Sign In</Text>
+            <Text style={[styles.submitButtonText, { fontSize: scale(18) }]}>Sign In</Text>
           )}
         </View>
       </TouchableOpacity>
     </Animated.View>
   );
 
-  const themedBackground = isDark ? '#000000' : '#F2F2F7';
   const { width } = Dimensions.get('window');
-  const isTablet = width >= 700;
+  const scale = (size: number) => Math.min(width / 414, 1) * size;
+  const imageSize = scale(105);
 
   return (
-    <View style={[styles.root, { backgroundColor: themedBackground }]}>
-      {/* Animated Background Bubbles */}
-      <Animated.View
-        style={[
-          styles.bgShape1,
-          {
-            transform: [{ translateX: bgAnim1 }, { translateY: bgAnim1 }],
-            opacity: isDark ? 0.12 : 0.08,
-          },
+    <View style={styles.root}>
+      {/* Stars container */}
+      <View style={[styles.starsContainer, { zIndex: 1 }]}>
+        <Animated.View style={[styles.star, { top: '15%', left: '20%', opacity: starOpacity1 }]} />
+        <Animated.View style={[styles.star, { top: '25%', right: '15%', opacity: starOpacity2 }]} />
+        <Animated.View style={[styles.star, { top: '35%', left: '10%', opacity: starOpacity3 }]} />
+        <Animated.View style={[styles.star, { top: '45%', right: '25%', opacity: starOpacity1 }]} />
+        <Animated.View style={[styles.star, { top: '20%', left: '60%', opacity: starOpacity2 }]} />
+        <Animated.View style={[styles.star, { top: '40%', left: '80%', opacity: starOpacity3 }]} />
+        <Animated.View style={[styles.star, { top: '10%', right: '40%', opacity: starOpacity1 }]} />
+        <Animated.View style={[styles.star, { top: '30%', left: '40%', opacity: starOpacity2 }]} />
+        <Animated.View style={[styles.star, { top: '50%', right: '10%', opacity: starOpacity3 }]} />
+        <Animated.View style={[styles.star, { top: '15%', left: '75%', opacity: starOpacity1 }]} />
+        <Animated.View style={[styles.star, { top: '8%', left: '5%', opacity: starOpacity4 }]} />
+        <Animated.View style={[styles.star, { top: '12%', right: '8%', opacity: starOpacity5 }]} />
+        <Animated.View style={[styles.star, { top: '18%', left: '45%', opacity: starOpacity6 }]} />
+        <Animated.View style={[styles.star, { top: '22%', right: '50%', opacity: starOpacity4 }]} />
+        <Animated.View style={[styles.star, { top: '28%', left: '15%', opacity: starOpacity5 }]} />
+        <Animated.View style={[styles.star, { top: '32%', right: '30%', opacity: starOpacity6 }]} />
+        <Animated.View style={[styles.star, { top: '38%', left: '55%', opacity: starOpacity4 }]} />
+        <Animated.View style={[styles.star, { top: '42%', right: '5%', opacity: starOpacity5 }]} />
+        <Animated.View style={[styles.star, { top: '48%', left: '25%', opacity: starOpacity6 }]} />
+        <Animated.View style={[styles.star, { top: '52%', right: '45%', opacity: starOpacity4 }]} />
+        <Animated.View style={[styles.star, { top: '58%', left: '70%', opacity: starOpacity5 }]} />
+        <Animated.View style={[styles.star, { top: '62%', right: '20%', opacity: starOpacity6 }]} />
+        <Animated.View style={[styles.star, { top: '68%', left: '35%', opacity: starOpacity4 }]} />
+        <Animated.View style={[styles.star, { top: '72%', right: '60%', opacity: starOpacity5 }]} />
+        <Animated.View style={[styles.star, { top: '78%', left: '85%', opacity: starOpacity6 }]} />
+        <Animated.View style={[styles.star, { top: '82%', right: '35%', opacity: starOpacity4 }]} />
+        <Animated.View style={[styles.star, { top: '85%', left: '50%', opacity: starOpacity5 }]} />
+        <Animated.View style={[styles.star, { top: '88%', right: '75%', opacity: starOpacity6 }]} />
+        <Animated.View style={[styles.star, { top: '5%', left: '30%', opacity: starOpacity4 }]} />
+        <Animated.View style={[styles.star, { top: '65%', right: '85%', opacity: starOpacity5 }]} />
+        <Animated.View style={[styles.smallStar, { top: '7%', left: '25%', opacity: starOpacity1 }]} />
+        <Animated.View style={[styles.smallStar, { top: '14%', right: '22%', opacity: starOpacity2 }]} />
+        <Animated.View style={[styles.smallStar, { top: '26%', left: '65%', opacity: starOpacity3 }]} />
+        <Animated.View style={[styles.smallStar, { top: '34%', right: '12%', opacity: starOpacity4 }]} />
+        <Animated.View style={[styles.smallStar, { top: '44%', left: '8%', opacity: starOpacity5 }]} />
+        <Animated.View style={[styles.smallStar, { top: '56%', right: '28%', opacity: starOpacity6 }]} />
+        <Animated.View style={[styles.smallStar, { top: '64%', left: '18%', opacity: starOpacity1 }]} />
+        <Animated.View style={[styles.smallStar, { top: '76%', right: '52%', opacity: starOpacity2 }]} />
+        <Animated.View style={[styles.smallStar, { top: '84%', left: '78%', opacity: starOpacity3 }]} />
+        <Animated.View style={[styles.smallStar, { top: '92%', right: '42%', opacity: starOpacity4 }]} />
+      </View>
+
+      {/* Cool blue light source */}
+      <LinearGradient
+        colors={[
+          'rgba(135, 206, 250, 0.35)',
+          'rgba(100, 149, 237, 0.28)',
+          'rgba(70, 130, 180, 0.22)',
+          'rgba(65, 105, 225, 0.17)',
+          'rgba(72, 61, 139, 0.13)',
+          'rgba(75, 0, 130, 0.10)',
+          'rgba(138, 43, 226, 0.075)',
+          'rgba(147, 0, 211, 0.05)',
+          'rgba(139, 69, 19, 0.035)',
+          'rgba(25, 25, 112, 0.022)',
+          'rgba(0, 0, 139, 0.015)',
+          'rgba(0, 0, 128, 0.008)',
+          'rgba(0, 0, 0, 0.003)',
+          'rgba(0, 0, 0, 0)',
         ]}
+        locations={[0, 0.06, 0.12, 0.19, 0.27, 0.36, 0.46, 0.57, 0.68, 0.78, 0.86, 0.92, 0.97, 1]}
+        style={[styles.coolLight, { zIndex: 2 }]}
+        start={{ x: 0.5, y: 1 }}
+        end={{ x: 0.5, y: 0 }}
       />
-      <Animated.View
-        style={[
-          styles.bgShape2,
-          {
-            transform: [{ translateX: bgAnim2 }, { translateY: bgAnim2 }],
-            opacity: isDark ? 0.12 : 0.08,
-          },
-        ]}
-      />
-      <Animated.View
-        style={[
-          styles.bgShape3,
-          {
-            transform: [{ translateX: bgAnim3 }, { translateY: bgAnim3 }],
-            opacity: isDark ? 0.12 : 0.08,
-          },
-        ]}
-      />
-      <Animated.View
-        style={[
-          styles.bgShape4,
-          {
-            transform: [{ translateX: bgAnim4 }, { translateY: bgAnim4 }],
-            opacity: isDark ? 0.12 : 0.08,
-          },
-        ]}
-      />
-      <Animated.View style={[{ flex: 1, opacity: fadeAnim, transform: [{ scale: cardScale }] }]}>
+
+      <Animated.View style={[{ flex: 1, opacity: fadeAnim, transform: [{ scale: cardScale }], zIndex: 10 }]}>
         <KeyboardAvoidingView
           style={{ flex: 1 }}
           behavior={isIOS ? 'padding' : 'height'}
-          keyboardVerticalOffset={isIOS ? insets.top + 48 : 0}
+          keyboardVerticalOffset={isIOS ? insets.top + scale(48) : scale(20)}
         >
           <ScrollView
             contentContainerStyle={[styles.scrollContent, { backgroundColor: 'transparent' }]}
             keyboardShouldPersistTaps="handled"
             showsVerticalScrollIndicator={false}
           >
-            <View style={[isTablet && styles.cardContainerTablet]}>
-              <View
-                style={[
-                  styles.card,
-                  isDark ? styles.cardDark : styles.cardLight,
-                  isTablet && { maxWidth: 400 },
-                ]}
-              >
-                <View style={styles.header}>
-                  <Text style={[styles.title, isDark ? styles.titleDark : styles.titleLight]}>
-                    Welcome Back
-                  </Text>
-                  <Text style={[styles.subtitle, isDark && { color: '#8E8E93' }]}>
-                    Sign in to access your files
-                  </Text>
-                </View>
-                <View style={styles.form}>
-                  {renderTextInput(
-                    email,
-                    setEmail,
-                    'Username or Email',
-                    emailError,
-                    false,
-                    'email-address',
-                    undefined,
-                    () => passwordInputRef.current?.focus(),
-                    'next'
-                  )}
-                  {renderTextInput(
-                    password,
-                    setPassword,
-                    'Password',
-                    passwordError,
-                    !showPassword,
-                    'default',
-                    passwordInputRef,
-                    handleSubmit,
-                    'done'
-                  )}
-                  <View style={styles.optionsContainer}>
-                    <View style={styles.switchContainer}>
-                      <Switch
-                        value={remember}
-                        onValueChange={setRemember}
-                        trackColor={{
-                          false: isDark ? '#3A3A3C' : '#E5E5EA',
-                          true: isDark ? '#0A84FF' : '#007AFF',
-                        }}
-                        thumbColor={isDark ? '#FFFFFF' : '#FFFFFF'}
-                        ios_backgroundColor={isDark ? '#3A3A3C' : '#E5E5EA'}
-                        accessibilityLabel="Stay signed in toggle"
-                        accessibilityHint="Toggle to stay signed in"
-                      />
-                      <Text style={[styles.rememberMeText, isDark && { color: '#8E8E93' }]}>
-                        Stay Signed In
-                      </Text>
-                    </View>
-                    <TouchableOpacity
-                      onPress={() => router.push('/forgot-password')}
-                      accessibilityLabel="Forgot password link"
-                      accessibilityHint="Tap to reset your password"
-                    >
-                      <Text
-                        style={[styles.forgotPassword, isDark && { color: isIOS ? '#0A84FF' : '#60A5FA' }]}
-                      >
-                        Forgot Password?
-                      </Text>
-                    </TouchableOpacity>
-                  </View>
-                  {renderSubmitButton()}
-                </View>
-                <View style={styles.footer}>
-                  <Text style={[styles.footerText, isDark && { color: '#8E8E93' }]}>
-                    New here?{' '}
-                    <Text
-                      style={[styles.signupLink, isDark && { color: isIOS ? '#0A84FF' : '#60A5FA' }]}
-                      onPress={() => router.push('/register')}
-                    >
-                      Sign Up
+            <View style={[styles.centerContent, { zIndex: 20 }]}>
+              <Image
+                source={require('../assets/planet-512.png')}
+                style={[styles.image, { width: imageSize, height: imageSize, marginBottom: scale(40) }]}
+                resizeMode="contain"
+              />
+              <View style={[styles.header, { marginBottom: scale(40) }]}>
+                <Text style={[styles.title, { fontSize: scale(29) }]}>
+                  Welcome Back
+                </Text>
+                <Text style={[styles.subtitle, { fontSize: scale(16), marginBottom: scale(38) }]}>
+                  Sign in to access your files
+                </Text>
+              </View>
+              <View style={[styles.form, { gap: scale(20), padding: scale(24), borderRadius: scale(Platform.OS === 'ios' ? 16 : 8) }]}>
+                {renderTextInput(
+                  email,
+                  setEmail,
+                  'Username or Email',
+                  emailError,
+                  'email',
+                  false,
+                  'email-address',
+                  undefined,
+                  () => passwordInputRef.current?.focus(),
+                  'next'
+                )}
+                {renderTextInput(
+                  password,
+                  setPassword,
+                  'Password',
+                  passwordError,
+                  'lock',
+                  !showPassword,
+                  'default',
+                  passwordInputRef,
+                  handleSubmit,
+                  'done'
+                )}
+                <View style={[styles.optionsContainer, { marginVertical: scale(16), padding: scale(12), borderRadius: scale(12) }]}>
+                  <TouchableOpacity 
+                    style={[styles.checkboxContainer, { gap: scale(8), padding: scale(8), borderRadius: scale(12) }]} 
+                    onPress={toggleRemember}
+                    activeOpacity={0.7}
+                    accessibilityLabel="Stay signed in checkbox"
+                    accessibilityHint="Toggle to stay signed in"
+                  >
+                    <MaterialCommunityIcons
+                      name={remember ? 'checkbox-marked' : 'checkbox-blank-outline'}
+                      size={scale(24)}
+                      color="#FFFFFF"
+                    />
+                    <Text style={[styles.rememberMeText, { fontSize: scale(17) }]}>
+                      Stay Signed In
                     </Text>
-                  </Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    onPress={() => router.push('/forgot-password')}
+                    style={{ borderRadius: scale(12) }}
+                    activeOpacity={0.7}
+                    accessibilityLabel="Forgot password link"
+                    accessibilityHint="Tap to reset your password"
+                  >
+                    <Text
+                      style={[styles.forgotPassword, { fontSize: scale(17), padding: scale(8) }]}
+                    >
+                      Forgot Password?
+                    </Text>
+                  </TouchableOpacity>
                 </View>
+                {renderSubmitButton()}
+              </View>
+              <View style={[styles.footer, { marginTop: scale(36), padding: scale(12), borderRadius: scale(12) }]}>
+                <Text style={[styles.footerText, { fontSize: scale(17) }]}>
+                  New here?{' '}
+                  <Text
+                    style={styles.signupLink}
+                    onPress={() => router.push('/register')}
+                  >
+                    Sign Up
+                  </Text>
+                </Text>
               </View>
             </View>
           </ScrollView>
@@ -549,271 +548,198 @@ const styles = StyleSheet.create({
   root: {
     flex: 1,
     overflow: 'hidden',
+    backgroundColor: '#000000',
   },
-  bgShape1: {
+  starsContainer: {
     position: 'absolute',
-    width: 160,
-    height: 160,
-    borderRadius: 80,
-    backgroundColor: Platform.OS === 'ios' ? '#007AFF' : '#2563EB',
-    top: '8%',
-    left: '-6%',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
   },
-  bgShape2: {
+  star: {
     position: 'absolute',
-    width: 120,
-    height: 120,
-    borderRadius: 60,
-    backgroundColor: Platform.OS === 'ios' ? '#0A84FF' : '#60A5FA',
-    bottom: '12%',
-    right: '-2%',
+    width: 2,
+    height: 2,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 1,
+    shadowColor: '#FFFFFF',
+    shadowOpacity: 0.8,
+    shadowRadius: 3,
+    elevation: 5,
   },
-  bgShape3: {
+  smallStar: {
     position: 'absolute',
-    width: 140,
-    height: 140,
-    borderRadius: 70,
-    backgroundColor: Platform.OS === 'ios' ? '#007AFF' : '#2563EB',
-    top: '20%',
-    right: '8%',
+    width: 1,
+    height: 1,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 0.5,
+    shadowColor: '#FFFFFF',
+    shadowOpacity: 0.6,
+    shadowRadius: 2,
+    elevation: 3,
   },
-  bgShape4: {
+  coolLight: {
     position: 'absolute',
-    width: 100,
-    height: 100,
-    borderRadius: 50,
-    backgroundColor: Platform.OS === 'ios' ? '#0A84FF' : '#60A5FA',
-    bottom: '25%',
-    left: '10%',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    height: '85%',
+    borderTopLeftRadius: 100,
+    borderTopRightRadius: 100,
   },
   scrollContent: {
     flexGrow: 1,
     justifyContent: 'center',
-    paddingHorizontal: 16,
+    paddingHorizontal: 36,
+    paddingVertical: 28,
   },
-  cardContainerTablet: {
+  centerContent: {
+    flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    flex: 1,
   },
-  card: {
-    borderRadius: 24,
-    padding: 30,
-    marginVertical: 32,
-    width: '100%',
+  image: {
     alignSelf: 'center',
-    ...Platform.select({
-      ios: {
-        backgroundColor: '#FFFFFF',
-        shadowColor: '#000000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.06,
-        shadowRadius: 14,
-      },
-      android: {
-        backgroundColor: '#FFFFFF',
-        elevation: 14,
-        shadowColor: '#000000',
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.3,
-        shadowRadius: 12,
-      },
-    }),
-  },
-  cardLight: {
-    backgroundColor: '#FFFFFF',
-  },
-  cardDark: {
-    backgroundColor: '#1C1C1E',
   },
   header: {
     alignItems: 'center',
-    marginBottom: 40,
   },
   title: {
-    fontSize: 32,
-    fontWeight: '900',
-    marginBottom: 8,
-  },
-  titleLight: {
-    color: '#000000',
-  },
-  titleDark: {
+    fontWeight: 'bold',
+    letterSpacing: 1.1,
+    textAlign: 'center',
     color: '#FFFFFF',
+    fontFamily: Platform.OS === 'ios' ? 'System' : 'Roboto',
   },
   subtitle: {
-    fontSize: 17,
-    color: '#8E8E93',
     textAlign: 'center',
-    lineHeight: 26,
-    fontWeight: '400',
+    fontWeight: '500',
+    color: '#D1D5DB',
   },
   form: {
-    gap: 30,
+    width: '100%',
+    backgroundColor: Platform.OS === 'ios' ? 'rgba(255, 255, 255, 0.08)' : 'rgba(255, 255, 255, 0.05)',
+    ...Platform.select({
+      ios: {
+        shadowColor: '#000000',
+        shadowOpacity: 0.1,
+        shadowRadius: 10,
+        shadowOffset: { width: 0, height: 2 },
+      },
+      android: {
+        elevation: 3,
+      },
+    }),
   },
   inputContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    borderRadius: 16,
-    backgroundColor: Platform.select({
-      ios: '#F2F2F7',
-      android: '#F5F5F5',
-    }),
-    borderWidth: 1,
-    borderColor: Platform.select({
-      ios: '#E5E5EA',
-      android: '#E0E0E0',
-    }),
+    borderRadius: Platform.OS === 'ios' ? 12 : 8,
+    paddingHorizontal: 16,
+    marginBottom: 16,
+  },
+  inputContainerIOS: {
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    shadowColor: '#000000',
+    shadowOpacity: 0.1,
+    shadowRadius: 6,
+    shadowOffset: { width: 0, height: 2 },
   },
   inputContainerAndroid: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    borderRadius: 0,
-    backgroundColor: 'transparent',
-    borderWidth: 0,
-    borderColor: 'transparent',
-    borderBottomWidth: 1,
-    paddingBottom: 4,
-  },
-  inputContainerAndroidLight: {
-    borderBottomColor: '#3A3A3C',
-  },
-  inputContainerAndroidDark: {
-    borderBottomColor: '#8E8E93',
+    backgroundColor: 'rgba(255, 255, 255, 0.05)',
+    borderBottomWidth: 2,
+    borderBottomColor: 'rgba(255, 255, 255, 0.2)',
+    elevation: 2,
   },
   inputContainerError: {
+    borderWidth: 1,
     borderColor: '#FF3B30',
-    borderWidth: Platform.OS === 'ios' ? 1 : 2,
-  },
-  inputContainerErrorAndroid: {
+    borderBottomWidth: Platform.OS === 'android' ? 2 : 1,
     borderBottomColor: '#FF3B30',
-    borderBottomWidth: 2,
   },
   inputIcon: {
-    marginLeft: 18,
-    marginRight: 14,
+    marginRight: 12,
   },
   input: {
     flex: 1,
-    paddingVertical: 22,
-    paddingHorizontal: 16,
-    fontSize: 20,
-    borderRadius: 16,
+    paddingVertical: Platform.OS === 'ios' ? 16 : 12,
+    fontSize: 16,
     fontWeight: '400',
-  },
-  inputAndroid: {
-    backgroundColor: 'transparent',
-    paddingVertical: 16,
-    paddingHorizontal: 0,
-  },
-  inputLight: {
-    backgroundColor: Platform.select({
-      ios: '#F2F2F7',
-      android: '#F5F5F5',
-    }),
-    color: '#000000',
-  },
-  inputDark: {
-    backgroundColor: '#2C2C2E',
     color: '#FFFFFF',
   },
-  inputError: {
-    borderColor: '#FF3B30',
-    borderWidth: Platform.OS === 'ios' ? 0 : 2,
+  inputIOS: {
+    fontFamily: 'System',
+  },
+  inputAndroid: {
+    fontFamily: 'Roboto',
   },
   errorText: {
     color: '#FF3B30',
-    fontSize: 14,
-    marginTop: 10,
-    marginLeft: 18,
     fontWeight: '400',
   },
   eyeIcon: {
-    padding: 18,
+    padding: 12,
   },
   optionsContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginVertical: 16,
+    backgroundColor: 'rgba(255, 255, 255, 0.05)',
   },
-  switchContainer: {
+  checkboxContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 14,
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
   },
   rememberMeText: {
-    color: '#8E8E93',
-    fontSize: 17,
+    color: '#D1D5DB',
     fontWeight: '400',
   },
   forgotPassword: {
-    color: Platform.select({
-      ios: '#007AFF',
-      android: '#2563EB',
-    }),
-    fontSize: 17,
+    color: '#FFFFFF',
     fontWeight: '500',
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
   },
   submitButton: {
-    borderRadius: 16,
-    overflow: 'hidden',
-    marginTop: 24,
+    alignItems: 'center',
+    justifyContent: 'center',
+    width: '100%',
+    backgroundColor: '#FFFFFF',
     ...Platform.select({
       ios: {
         shadowColor: '#000000',
+        shadowOpacity: 0.2,
+        shadowRadius: 8,
         shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.15,
-        shadowRadius: 12,
       },
       android: {
-        elevation: 10,
+        elevation: 4,
       },
     }),
   },
   buttonInner: {
-    paddingVertical: 24,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: Platform.select({
-      ios: '#007AFF',
-      android: '#2563EB',
-    }),
-  },
-  buttonLight: {
-    backgroundColor: Platform.select({
-      ios: '#007AFF',
-      android: '#2563EB',
-    }),
-  },
-  buttonDark: {
-    backgroundColor: Platform.select({
-      ios: '#0A84FF',
-      android: '#60A5FA',
-    }),
+    paddingVertical: 0,
   },
   disabledButton: {
     opacity: 0.7,
   },
   submitButtonText: {
-    color: '#FFFFFF',
-    fontSize: 20,
-    fontWeight: '900',
+    color: '#000000',
+    fontWeight: '700',
+    letterSpacing: 0.54,
+    fontFamily: Platform.OS === 'ios' ? 'System' : 'Roboto',
   },
   footer: {
-    marginTop: 36,
     alignItems: 'center',
+    backgroundColor: 'rgba(255, 255, 255, 0.05)',
   },
   footerText: {
-    color: '#8E8E93',
-    fontSize: 17,
+    color: '#D1D5DB',
     fontWeight: '400',
   },
   signupLink: {
-    color: Platform.select({
-      ios: '#007AFF',
-      android: '#2563EB',
-    }),
+    color: '#FFFFFF',
     fontWeight: '600',
   },
 });
